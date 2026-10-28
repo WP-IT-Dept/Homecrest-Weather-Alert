@@ -7,8 +7,8 @@ Internal ASP.NET Core (Razor Pages) app for Homecrest staff to compose weather a
 - Cookie authentication (ASP.NET Core Identity) with roles **User** and **Admin**
 - Compose & send: one Twilio `MessageResource.Create` **per recipient** (never group SMS)
 - Employee directory: searchable name + phone CRUD; US numbers normalized to E.164
-- Admin user management: create, disable/enable, reset password
-- Twilio Account SID, API Key (SK…) + secret, and From number are **config-only** (swap trial → production From without code changes)
+- Admin user management: create, disable/enable, reset password, grant/revoke **Admin** role (Admin-only). The seed account `admin@homecrest.local` cannot be disabled or demoted.
+- Twilio Account SID, Auth Token, and From number are **config-only** (swap trial → production From without code changes)
 
 ## Requirements
 

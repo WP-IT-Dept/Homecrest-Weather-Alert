@@ -16,6 +16,28 @@ public static class SeedData
     /// </summary>
     public const string DefaultAdminPasswordFallback = "ChangeMe!Admin1";
 
+    /// <summary>
+    /// True for the seeded bootstrap admin (default or Seed:AdminEmail).
+    /// That account cannot be disabled, demoted, or deleted from Admin → Users.
+    /// </summary>
+    public static bool IsProtectedSeedAdmin(IdentityUser user, IConfiguration? configuration = null)
+    {
+        var email = user.Email ?? user.UserName;
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return false;
+        }
+
+        if (string.Equals(email, DefaultAdminEmail, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var configured = configuration?["Seed:AdminEmail"];
+        return !string.IsNullOrWhiteSpace(configured)
+            && string.Equals(email, configured, StringComparison.OrdinalIgnoreCase);
+    }
+
     public static async Task InitializeAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
