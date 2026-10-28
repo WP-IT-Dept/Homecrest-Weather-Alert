@@ -23,7 +23,8 @@
     </div>
 
     <div class="form-check mb-3">
-        <input type="hidden" name="Input.IsActive" value="false" />
+        @* asp-for already emits checkbox then a trailing hidden false (works with FirstValue).
+           Do NOT add another hidden false before the checkbox — that made every save inactive. *@
         <input asp-for="Input.IsActive" class="form-check-input" />
         <label asp-for="Input.IsActive" class="form-check-label"></label>
     </div>

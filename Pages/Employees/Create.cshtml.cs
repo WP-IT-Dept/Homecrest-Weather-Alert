@@ -28,12 +28,13 @@ public class CreateModel : PageModel
         [Display(Name = "Phone")]
         public string Phone { get; set; } = string.Empty;
 
-        [Display(Name = "Active")]
+        [Display(Name = "Active (uncheck only for leavers / HR removal)")]
         public bool IsActive { get; set; } = true;
     }
 
     public void OnGet()
     {
+        Input.IsActive = true;
     }
 
     public async Task<IActionResult> OnPostAsync()
