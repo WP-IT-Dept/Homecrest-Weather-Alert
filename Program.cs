@@ -77,3 +77,6 @@ app.UseAuthorization();
 app.MapRazorPages();
 
 app.Run();
+
+// Expose entry point for WebApplicationFactory integration tests.
+public partial class Program;

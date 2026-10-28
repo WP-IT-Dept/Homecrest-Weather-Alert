@@ -22,6 +22,7 @@ public static class SeedData
         var sp = scope.ServiceProvider;
 
         var db = sp.GetRequiredService<ApplicationDbContext>();
+        // Migrate schema only — never bulk-update Employees or reset IsActive on startup.
         await db.Database.MigrateAsync();
 
         var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();

@@ -11,6 +11,10 @@ obj/
 *.db-wal
 app.db
 app.db-*
+test-isactive*.db
+test-isactive*.db-*
+*.Tests/bin/
+*.Tests/obj/
 
 ## Secrets / local
 secrets.json
