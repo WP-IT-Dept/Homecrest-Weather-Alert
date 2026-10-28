@@ -1,0 +1,79 @@
+@page
+@model HomecrestWeatherAlert.Pages.Compose.IndexModel
+@{
+    ViewData["Title"] = "Compose & Send";
+}
+
+<h1 class="h3 mb-3">Compose weather alert SMS</h1>
+<p class="text-muted">Each active employee receives an individual Twilio SMS. Numbers are never shared in a group message.</p>
+
+@if (!Model.TwilioConfigured)
+{
+    <div class="alert alert-warning">
+        Twilio is not configured. Set <code>Twilio:AccountSid</code>, <code>Twilio:AuthToken</code>, and <code>Twilio:FromNumber</code>
+        via User Secrets or environment variables before sending.
+    </div>
+}
+
+<div class="mb-3">
+    <strong>@Model.ActiveRecipientCount</strong> active employee(s) with a valid phone number
+    @if (Model.SkippedInvalidPhoneCount > 0)
+    {
+        <span class="text-muted">(@Model.SkippedInvalidPhoneCount skipped — invalid phone)</span>
+    }
+</div>
+
+<form method="post" class="mb-4">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+    <div class="mb-3">
+        <label asp-for="Input.Message" class="form-label"></label>
+        <textarea asp-for="Input.Message" class="form-control" rows="6" maxlength="1600"></textarea>
+        <span asp-validation-for="Input.Message" class="text-danger"></span>
+        <div class="form-text">Manual message only (no weather API in v1). Keep it short for SMS.</div>
+    </div>
+
+    <div class="form-check mb-3">
+        <input type="hidden" name="Input.ConfirmSend" value="false" />
+        <input asp-for="Input.ConfirmSend" class="form-check-input" />
+        <label asp-for="Input.ConfirmSend" class="form-check-label"></label>
+        <span asp-validation-for="Input.ConfirmSend" class="text-danger d-block"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary" @(Model.TwilioConfigured ? null : "disabled")>Send individual SMS</button>
+</form>
+
+@if (Model.Results is { Count: > 0 })
+{
+    var ok = Model.Results.Count(r => r.Success);
+    var fail = Model.Results.Count(r => !r.Success);
+    <h2 class="h5">Send results</h2>
+    <p>Sent: <strong>@ok</strong> &middot; Failed: <strong>@fail</strong></p>
+    <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Detail</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.Results)
+            {
+                <tr>
+                    <td>@r.EmployeeName</td>
+                    <td>@r.PhoneMasked</td>
+                    <td>@(r.Success ? "Sent" : "Failed")</td>
+                    <td class="small text-muted">@(r.Success ? r.TwilioSid : r.Error)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
