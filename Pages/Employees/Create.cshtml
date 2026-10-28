@@ -22,11 +22,12 @@
         <div class="form-text">Stored as entered; normalized to E.164 for Twilio.</div>
     </div>
 
-    <div class="form-check mb-3">
-        @* asp-for already emits checkbox then a trailing hidden false (works with FirstValue).
-           Do NOT add another hidden false before the checkbox — that made every save inactive. *@
-        <input asp-for="Input.IsActive" class="form-check-input" />
-        <label asp-for="Input.IsActive" class="form-check-label"></label>
+    <div class="mb-3">
+        <label asp-for="Input.IsActive" class="form-label"></label>
+        @* Use a single-value select — checkbox+hidden posts two values and FirstValue binding is fragile. *@
+        <select asp-for="Input.IsActive" class="form-select" asp-items="Model.ActiveOptions"></select>
+        <div class="form-text">Set Inactive only for leavers / HR removal. Login and app startup never change this.</div>
+        <span asp-validation-for="Input.IsActive" class="text-danger"></span>
     </div>
 
     <button type="submit" class="btn btn-primary">Save</button>
