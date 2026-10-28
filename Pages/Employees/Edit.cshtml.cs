@@ -22,6 +22,8 @@ public class EditModel : PageModel
 
     public List<SelectListItem> ActiveOptions { get; } = EmployeeActiveOptions.Items;
 
+    public DateTimeOffset? OptedOutAt { get; set; }
+
     public class InputModel
     {
         public int Id { get; set; }
@@ -52,6 +54,7 @@ public class EditModel : PageModel
             Phone = employee.Phone,
             IsActive = employee.IsActive
         };
+        OptedOutAt = employee.OptedOutAt;
         return Page();
     }
 
@@ -81,7 +84,18 @@ public class EditModel : PageModel
         employee.Phone = Input.Phone.Trim();
         employee.PhoneE164 = e164;
         employee.IsActive = Input.IsActive;
+        if (Input.IsActive)
+        {
+            // Explicit reactivation by staff clears SMS opt-out marker.
+            employee.OptedOutAt = null;
+        }
+        else if (employee.OptedOutAt is null)
+        {
+            // Manual deactivate without a prior STOP — leave OptedOutAt null (HR/leaver).
+        }
+
         employee.UpdatedAt = DateTimeOffset.UtcNow;
+        OptedOutAt = employee.OptedOutAt;
 
         await _db.SaveChangesAsync();
         TempData["StatusMessage"] = $"Updated {employee.Name}.";

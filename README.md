@@ -5,10 +5,10 @@ Internal ASP.NET Core (Razor Pages) app for Homecrest staff to compose weather a
 ## Features
 
 - Cookie authentication (ASP.NET Core Identity) with roles **User** and **Admin**
-- Compose & send: one Twilio `MessageResource.Create` **per recipient** (never group SMS)
-- Employee directory: searchable name + phone CRUD; US numbers normalized to E.164
+- Compose & send: one Twilio `MessageResource.Create` **per recipient** (never group SMS); only **active** employees are messaged
+- Employee directory: searchable name + phone CRUD; US → E.164; SMS **STOP** opt-out sets inactive and records `OptedOutAt`
 - Admin user management: create, disable/enable, reset password, grant/revoke **Admin** role (Admin-only). The seed account `admin@homecrest.local` cannot be disabled or demoted.
-- Twilio Account SID, Auth Token, and From number are **config-only** (swap trial → production From without code changes)
+- Twilio Account SID, API Key + secret, Auth Token (webhook signatures), and From number are **config-only**
 
 ## Requirements
 
@@ -48,6 +48,7 @@ Authenticate with an **API key** (preferred). Placeholders live in `appsettings.
 dotnet user-secrets set "Twilio:AccountSid" "ACxxxxxxxx"
 dotnet user-secrets set "Twilio:ApiKey" "SKxxxxxxxx"
 dotnet user-secrets set "Twilio:ApiSecret" "your_api_key_secret"
+dotnet user-secrets set "Twilio:AuthToken" "your_auth_token"
 dotnet user-secrets set "Twilio:FromNumber" "+1xxxxxxxxxx"
 ```
 
@@ -57,6 +58,7 @@ Or environment variables (double underscore):
 export Twilio__AccountSid=ACxxxxxxxx
 export Twilio__ApiKey=SKxxxxxxxx
 export Twilio__ApiSecret=your_api_key_secret
+export Twilio__AuthToken=your_auth_token
 export Twilio__FromNumber=+1xxxxxxxxxx
 export HOMECREST_ADMIN_PASSWORD='YourStrong!Pass1'
 ```
@@ -64,11 +66,33 @@ export HOMECREST_ADMIN_PASSWORD='YourStrong!Pass1'
 | Config key | Env var | Notes |
 | --- | --- | --- |
 | `Twilio:AccountSid` | `Twilio__AccountSid` | Account SID (`AC…`) |
-| `Twilio:ApiKey` | `Twilio__ApiKey` | API Key SID (`SK…`) |
+| `Twilio:ApiKey` | `Twilio__ApiKey` | API Key SID (`SK…`) — preferred for **sending** |
 | `Twilio:ApiSecret` | `Twilio__ApiSecret` | API Key secret |
+| `Twilio:AuthToken` | `Twilio__AuthToken` | Required in **Production** to validate inbound webhook signatures; also send fallback if API key unset |
 | `Twilio:FromNumber` | `Twilio__FromNumber` | E.164 From number |
 
-`Twilio:AuthToken` / `Twilio__AuthToken` is **not required**. If both API key and Auth Token are present, the app uses the API key. Auth Token remains a temporary fallback only.
+If both API key and Auth Token are present for sending, the app uses the **API key**. Auth Token is still needed for webhook signature validation.
+
+### Inbound STOP / opt-out webhook
+
+When someone texts **STOP** (also `STOPALL`, `UNSUBSCRIBE`, `CANCEL`, `END`, `QUIT`) to the Twilio From number, the app:
+
+1. Matches `From` to an employee phone (E.164)
+2. Sets `IsActive = false` and `OptedOutAt` (UTC)
+3. Future Compose sends skip them (active-only filter)
+
+**Webhook path:** `POST /api/twilio/sms` (anonymous; Twilio signature validated when `Twilio:AuthToken` is set)
+
+**Twilio Console setup**
+
+1. Open the Messaging phone number (or Messaging Service) used as From.
+2. Under **Messaging** → **A message comes in**, set:
+   - Webhook URL: `https://{your-iis-host}/api/twilio/sms`
+   - Method: **HTTP POST**
+3. Ensure the site is reachable on HTTPS from the internet (or use a tunnel for local testing).
+4. On IIS behind HTTPS termination, forwarded headers (`X-Forwarded-Proto` / `X-Forwarded-Host`) are honored so signature validation uses the public URL Twilio called.
+
+Empty TwiML is returned; carriers/Twilio still send their standard opt-out confirmation to the user.
 
 ### Connection string (SQLite → another store)
 
@@ -117,11 +141,13 @@ Ensure the app pool identity can write the SQLite file directory.
    - `Twilio__AccountSid`
    - `Twilio__ApiKey`
    - `Twilio__ApiSecret`
+   - `Twilio__AuthToken` (webhook signature validation)
    - `Twilio__FromNumber`
    - `HOMECREST_ADMIN_PASSWORD` (first run only, if not already seeded)
    - Optional: `ConnectionStrings__DefaultConnection`, `ASPNETCORE_ENVIRONMENT=Production`
 6. Grant the app pool identity **Modify** on the folder that holds `app.db` (or your configured data path).
 7. Bind HTTPS with a certificate; keep HTTP→HTTPS redirect enabled by the app.
+8. Point the Twilio number’s inbound SMS webhook at `https://{host}/api/twilio/sms` (POST).
 
 `web.config` in the repo shows the ANCM `inprocess` hosting model. Published output includes a generated `web.config` as well.
 
@@ -133,9 +159,10 @@ Ensure the app pool identity can write the SQLite file directory.
 
 ## Project layout
 
-- `Pages/Compose` — message + send status
-- `Pages/Employees` — CRUD + search
+- `Pages/Compose` — message + send status (active employees only)
+- `Pages/Employees` — CRUD + search + opt-out timestamp
 - `Pages/Admin/Users` — admin-only login management
+- `Controllers/TwilioSmsWebhookController.cs` — inbound STOP webhook (`/api/twilio/sms`)
 - `Services/TwilioSmsSender.cs` — one Create per recipient
 - `Services/PhoneNormalizer.cs` — US → E.164
 - `Data/SeedData.cs` — roles + default admin

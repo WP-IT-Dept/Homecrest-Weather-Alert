@@ -38,7 +38,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.Configure<TwilioOptions>(builder.Configuration.GetSection(TwilioOptions.SectionName));
 builder.Services.AddSingleton<ISmsSender, TwilioSmsSender>();
+builder.Services.AddScoped<EmployeeOptOutService>();
 
+builder.Services.AddControllers();
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeFolder("/");
@@ -74,6 +76,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapControllers();
 app.MapRazorPages();
 
 app.Run();

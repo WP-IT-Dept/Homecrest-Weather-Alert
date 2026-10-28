@@ -21,6 +21,10 @@ public class Employee
 
     public bool IsActive { get; set; } = true;
 
+    /// <summary>UTC time the employee texted a STOP/opt-out keyword (null if never opted out).</summary>
+    [Display(Name = "Opted out")]
+    public DateTimeOffset? OptedOutAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;

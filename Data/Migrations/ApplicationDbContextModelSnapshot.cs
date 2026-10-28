@@ -34,6 +34,9 @@ namespace HomecrestWeatherAlert.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset?>("OptedOutAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasMaxLength(32)
