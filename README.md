@@ -8,7 +8,7 @@ Internal ASP.NET Core (Razor Pages) app for Homecrest staff to compose weather a
 - Compose & send: one Twilio `MessageResource.Create` **per recipient** (never group SMS)
 - Employee directory: searchable name + phone CRUD; US numbers normalized to E.164
 - Admin user management: create, disable/enable, reset password
-- Twilio Account SID, Auth Token, and From number are **config-only** (swap trial → production From without code changes)
+- Twilio Account SID, API Key (SK…) + secret, and From number are **config-only** (swap trial → production From without code changes)
 
 ## Requirements
 
@@ -42,11 +42,12 @@ Open http://localhost:5055 and sign in with the seeded admin.
 
 ### Twilio config (do not commit real secrets)
 
-Placeholders live in `appsettings.json`. Prefer User Secrets or environment variables:
+Authenticate with an **API key** (preferred). Placeholders live in `appsettings.json`. Prefer User Secrets or environment variables:
 
 ```bash
 dotnet user-secrets set "Twilio:AccountSid" "ACxxxxxxxx"
-dotnet user-secrets set "Twilio:AuthToken" "your_auth_token"
+dotnet user-secrets set "Twilio:ApiKey" "SKxxxxxxxx"
+dotnet user-secrets set "Twilio:ApiSecret" "your_api_key_secret"
 dotnet user-secrets set "Twilio:FromNumber" "+1xxxxxxxxxx"
 ```
 
@@ -54,10 +55,20 @@ Or environment variables (double underscore):
 
 ```bash
 export Twilio__AccountSid=ACxxxxxxxx
-export Twilio__AuthToken=your_auth_token
+export Twilio__ApiKey=SKxxxxxxxx
+export Twilio__ApiSecret=your_api_key_secret
 export Twilio__FromNumber=+1xxxxxxxxxx
 export HOMECREST_ADMIN_PASSWORD='YourStrong!Pass1'
 ```
+
+| Config key | Env var | Notes |
+| --- | --- | --- |
+| `Twilio:AccountSid` | `Twilio__AccountSid` | Account SID (`AC…`) |
+| `Twilio:ApiKey` | `Twilio__ApiKey` | API Key SID (`SK…`) |
+| `Twilio:ApiSecret` | `Twilio__ApiSecret` | API Key secret |
+| `Twilio:FromNumber` | `Twilio__FromNumber` | E.164 From number |
+
+`Twilio:AuthToken` / `Twilio__AuthToken` is **not required**. If both API key and Auth Token are present, the app uses the API key. Auth Token remains a temporary fallback only.
 
 ### Connection string (SQLite → another store)
 
@@ -104,7 +115,8 @@ Ensure the app pool identity can write the SQLite file directory.
    - Create a site (or application) pointing at the publish folder; assign that pool.
 5. Set environment variables on the site or app pool (Configuration Editor → `system.webServer/aspNetCore` → `environmentVariables`), or use `web.config` / Azure App Settings–style machine env:
    - `Twilio__AccountSid`
-   - `Twilio__AuthToken`
+   - `Twilio__ApiKey`
+   - `Twilio__ApiSecret`
    - `Twilio__FromNumber`
    - `HOMECREST_ADMIN_PASSWORD` (first run only, if not already seeded)
    - Optional: `ConnectionStrings__DefaultConnection`, `ASPNETCORE_ENVIRONMENT=Production`

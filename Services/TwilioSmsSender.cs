@@ -28,10 +28,10 @@ public class TwilioSmsSender : ISmsSender
         if (!IsConfigured)
         {
             throw new InvalidOperationException(
-                "Twilio is not configured. Set Twilio:AccountSid, Twilio:AuthToken, and Twilio:FromNumber via User Secrets, environment variables, or appsettings.");
+                "Twilio is not configured. Set Twilio:AccountSid, Twilio:ApiKey, Twilio:ApiSecret, and Twilio:FromNumber via User Secrets, environment variables, or appsettings.");
         }
 
-        TwilioClient.Init(_options.AccountSid, _options.AuthToken);
+        InitializeTwilioClient(_options, _logger);
         var from = new PhoneNumber(_options.FromNumber);
         var results = new List<SmsSendResult>();
 
@@ -77,5 +77,29 @@ public class TwilioSmsSender : ISmsSender
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Prefer API key auth: TwilioClient.Init(apiKey, apiSecret, accountSid).
+    /// Fall back to Account SID + Auth Token only when API key is not configured.
+    /// </summary>
+    internal static void InitializeTwilioClient(TwilioOptions options, ILogger? logger = null)
+    {
+        if (options.PreferApiKey)
+        {
+            TwilioClient.Init(options.ApiKey, options.ApiSecret, options.AccountSid);
+            logger?.LogDebug("Twilio client initialized with API key credentials.");
+            return;
+        }
+
+        if (options.HasAuthTokenCredentials)
+        {
+            TwilioClient.Init(options.AccountSid, options.AuthToken);
+            logger?.LogWarning(
+                "Twilio client initialized with legacy Auth Token. Prefer Twilio:ApiKey + Twilio:ApiSecret.");
+            return;
+        }
+
+        throw new InvalidOperationException("Twilio credentials are incomplete.");
     }
 }
