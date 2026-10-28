@@ -13,6 +13,15 @@
 {
     <div class="alert alert-success">@status</div>
 }
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-warning">@error</div>
+}
+
+<p class="text-muted small">
+    Admins can grant or revoke the Admin role. The seed account
+    <code>admin@homecrest.local</code> is protected (cannot be disabled or demoted).
+</p>
 
 <div class="table-responsive">
     <table class="table table-striped align-middle">
@@ -28,11 +37,42 @@
         @foreach (var u in Model.Users)
         {
             <tr>
-                <td>@u.Email</td>
+                <td>
+                    @u.Email
+                    @if (u.IsProtectedSeedAdmin)
+                    {
+                        <span class="badge text-bg-secondary">Protected seed admin</span>
+                    }
+                </td>
                 <td>@string.Join(", ", u.Roles)</td>
                 <td>@(u.Disabled ? "Disabled" : "Active")</td>
                 <td class="text-nowrap">
                     <a asp-page="ResetPassword" asp-route-id="@u.Id">Reset password</a>
+
+                    <span class="text-muted">|</span>
+                    @if (u.IsAdmin)
+                    {
+                        @if (u.IsProtectedSeedAdmin)
+                        {
+                            <button type="button" class="btn btn-link p-0 align-baseline text-muted" disabled
+                                    title="Protected seed admin cannot lose the Admin role">Remove Admin</button>
+                        }
+                        else
+                        {
+                            <form method="post" asp-page-handler="RevokeAdmin" class="d-inline">
+                                <input type="hidden" name="id" value="@u.Id" />
+                                <button type="submit" class="btn btn-link p-0 align-baseline">Remove Admin</button>
+                            </form>
+                        }
+                    }
+                    else
+                    {
+                        <form method="post" asp-page-handler="GrantAdmin" class="d-inline">
+                            <input type="hidden" name="id" value="@u.Id" />
+                            <button type="submit" class="btn btn-link p-0 align-baseline">Make Admin</button>
+                        </form>
+                    }
+
                     <span class="text-muted">|</span>
                     @if (u.Disabled)
                     {
@@ -40,6 +80,11 @@
                             <input type="hidden" name="id" value="@u.Id" />
                             <button type="submit" class="btn btn-link p-0 align-baseline">Enable</button>
                         </form>
+                    }
+                    else if (u.IsProtectedSeedAdmin)
+                    {
+                        <button type="button" class="btn btn-link p-0 align-baseline text-muted" disabled
+                                title="Protected seed admin cannot be disabled">Disable</button>
                     }
                     else
                     {
