@@ -9,10 +9,12 @@ namespace HomecrestWeatherAlert.Pages.Admin.Users;
 public class IndexModel : PageModel
 {
     private readonly UserManager<IdentityUser> _userManager;
+    private readonly IConfiguration _configuration;
 
-    public IndexModel(UserManager<IdentityUser> userManager)
+    public IndexModel(UserManager<IdentityUser> userManager, IConfiguration configuration)
     {
         _userManager = userManager;
+        _configuration = configuration;
     }
 
     public IList<UserRow> Users { get; set; } = new List<UserRow>();
@@ -22,6 +24,8 @@ public class IndexModel : PageModel
         public string Id { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public bool Disabled { get; set; }
+        public bool IsAdmin { get; set; }
+        public bool IsProtectedSeedAdmin { get; set; }
         public IList<string> Roles { get; set; } = new List<string>();
     }
 
@@ -31,12 +35,15 @@ public class IndexModel : PageModel
         Users = new List<UserRow>();
         foreach (var user in users)
         {
+            var roles = await _userManager.GetRolesAsync(user);
             Users.Add(new UserRow
             {
                 Id = user.Id,
                 Email = user.Email ?? user.UserName ?? user.Id,
                 Disabled = user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow,
-                Roles = await _userManager.GetRolesAsync(user)
+                IsAdmin = roles.Contains(SeedData.AdminRole),
+                IsProtectedSeedAdmin = SeedData.IsProtectedSeedAdmin(user, _configuration),
+                Roles = roles
             });
         }
     }
@@ -49,10 +56,15 @@ public class IndexModel : PageModel
             return NotFound();
         }
 
-        if (string.Equals(user.Email, User.Identity?.Name, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(user.UserName, User.Identity?.Name, StringComparison.OrdinalIgnoreCase))
+        if (SeedData.IsProtectedSeedAdmin(user, _configuration))
         {
-            TempData["StatusMessage"] = "Cannot disable your own account from this screen.";
+            TempData["ErrorMessage"] = $"Cannot disable the protected seed admin ({SeedData.DefaultAdminEmail}).";
+            return RedirectToPage();
+        }
+
+        if (IsSelf(user))
+        {
+            TempData["ErrorMessage"] = "Cannot disable your own account from this screen.";
             return RedirectToPage();
         }
 
@@ -76,4 +88,65 @@ public class IndexModel : PageModel
         TempData["StatusMessage"] = $"Enabled {user.Email}.";
         return RedirectToPage();
     }
+
+    public async Task<IActionResult> OnPostGrantAdminAsync(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        if (!await _userManager.IsInRoleAsync(user, SeedData.UserRole))
+        {
+            await _userManager.AddToRoleAsync(user, SeedData.UserRole);
+        }
+
+        if (!await _userManager.IsInRoleAsync(user, SeedData.AdminRole))
+        {
+            await _userManager.AddToRoleAsync(user, SeedData.AdminRole);
+        }
+
+        TempData["StatusMessage"] = $"Granted Admin role to {user.Email}.";
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostRevokeAdminAsync(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        if (SeedData.IsProtectedSeedAdmin(user, _configuration))
+        {
+            TempData["ErrorMessage"] =
+                $"Cannot remove the Admin role from the protected seed admin ({SeedData.DefaultAdminEmail}).";
+            return RedirectToPage();
+        }
+
+        if (IsSelf(user))
+        {
+            TempData["ErrorMessage"] = "Cannot remove your own Admin role from this screen.";
+            return RedirectToPage();
+        }
+
+        if (await _userManager.IsInRoleAsync(user, SeedData.AdminRole))
+        {
+            await _userManager.RemoveFromRoleAsync(user, SeedData.AdminRole);
+        }
+
+        if (!await _userManager.IsInRoleAsync(user, SeedData.UserRole))
+        {
+            await _userManager.AddToRoleAsync(user, SeedData.UserRole);
+        }
+
+        TempData["StatusMessage"] = $"Removed Admin role from {user.Email}. They remain a User.";
+        return RedirectToPage();
+    }
+
+    private bool IsSelf(IdentityUser user) =>
+        string.Equals(user.Email, User.Identity?.Name, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(user.UserName, User.Identity?.Name, StringComparison.OrdinalIgnoreCase);
 }
