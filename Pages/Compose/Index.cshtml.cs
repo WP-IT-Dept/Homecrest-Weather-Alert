@@ -60,7 +60,7 @@ public class IndexModel : PageModel
 
         if (!TwilioConfigured)
         {
-            ModelState.AddModelError(string.Empty, "Twilio is not configured. Set AccountSid, AuthToken, and FromNumber before sending.");
+            ModelState.AddModelError(string.Empty, "Twilio is not configured. Set AccountSid, ApiKey, ApiSecret, and FromNumber before sending.");
             return Page();
         }
 

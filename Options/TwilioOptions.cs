@@ -7,17 +7,38 @@ public class TwilioOptions
     /// <summary>Account SID (starts with AC...).</summary>
     public string AccountSid { get; set; } = string.Empty;
 
-    /// <summary>Auth Token — prefer env/User Secrets, never commit real values.</summary>
+    /// <summary>API Key SID (starts with SK...). Preferred over AuthToken.</summary>
+    public string ApiKey { get; set; } = string.Empty;
+
+    /// <summary>API Key secret — prefer env/User Secrets, never commit real values.</summary>
+    public string ApiSecret { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Legacy Auth Token. Optional fallback only when ApiKey/ApiSecret are not set.
+    /// Prefer API key authentication for sending.
+    /// </summary>
     public string AuthToken { get; set; } = string.Empty;
 
     /// <summary>E.164 From number, e.g. +15551234567 (trial number for now).</summary>
     public string FromNumber { get; set; } = string.Empty;
 
-    public bool IsConfigured =>
-        !string.IsNullOrWhiteSpace(AccountSid)
-        && !AccountSid.Contains("YOUR_", StringComparison.OrdinalIgnoreCase)
-        && !string.IsNullOrWhiteSpace(AuthToken)
-        && !AuthToken.Contains("YOUR_", StringComparison.OrdinalIgnoreCase)
-        && !string.IsNullOrWhiteSpace(FromNumber)
-        && !FromNumber.Contains("YOUR_", StringComparison.OrdinalIgnoreCase);
+    public bool HasApiKeyCredentials =>
+        IsReal(AccountSid)
+        && IsReal(ApiKey)
+        && IsReal(ApiSecret)
+        && IsReal(FromNumber);
+
+    public bool HasAuthTokenCredentials =>
+        IsReal(AccountSid)
+        && IsReal(AuthToken)
+        && IsReal(FromNumber);
+
+    /// <summary>True when API key (preferred) or legacy Auth Token credentials are present.</summary>
+    public bool IsConfigured => HasApiKeyCredentials || HasAuthTokenCredentials;
+
+    public bool PreferApiKey => HasApiKeyCredentials;
+
+    private static bool IsReal(string? value) =>
+        !string.IsNullOrWhiteSpace(value)
+        && !value.Contains("YOUR_", StringComparison.OrdinalIgnoreCase);
 }
