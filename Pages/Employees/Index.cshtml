@@ -1,0 +1,62 @@
+@page
+@model HomecrestWeatherAlert.Pages.Employees.IndexModel
+@{
+    ViewData["Title"] = "Employees";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Employee phone list</h1>
+    <a class="btn btn-primary" asp-page="Create">Add employee</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-6">
+        <input class="form-control" name="q" value="@Model.Q" placeholder="Search by name or phone" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Search</button>
+        @if (!string.IsNullOrWhiteSpace(Model.Q))
+        {
+            <a class="btn btn-link" asp-page="./Index">Clear</a>
+        }
+    </div>
+</form>
+
+@if (TempData["StatusMessage"] is string status)
+{
+    <div class="alert alert-success">@status</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>E.164</th>
+                <th>Active</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Model.Employees.Count == 0)
+        {
+            <tr><td colspan="5" class="text-muted">No employees found.</td></tr>
+        }
+        @foreach (var e in Model.Employees)
+        {
+            <tr class="@(!e.IsActive ? "table-secondary" : null)">
+                <td>@e.Name</td>
+                <td>@e.Phone</td>
+                <td class="small text-muted">@(e.PhoneE164 ?? "—")</td>
+                <td>@(e.IsActive ? "Yes" : "No")</td>
+                <td class="text-nowrap">
+                    <a asp-page="Edit" asp-route-id="@e.Id">Edit</a>
+                    <span class="text-muted">|</span>
+                    <a asp-page="Delete" asp-route-id="@e.Id" class="text-danger">Delete</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

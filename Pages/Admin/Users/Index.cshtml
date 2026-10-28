@@ -1,0 +1,56 @@
+@page
+@model HomecrestWeatherAlert.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "Manage users";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">User logins</h1>
+    <a class="btn btn-primary" asp-page="Create">Create user</a>
+</div>
+
+@if (TempData["StatusMessage"] is string status)
+{
+    <div class="alert alert-success">@status</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Roles</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var u in Model.Users)
+        {
+            <tr>
+                <td>@u.Email</td>
+                <td>@string.Join(", ", u.Roles)</td>
+                <td>@(u.Disabled ? "Disabled" : "Active")</td>
+                <td class="text-nowrap">
+                    <a asp-page="ResetPassword" asp-route-id="@u.Id">Reset password</a>
+                    <span class="text-muted">|</span>
+                    @if (u.Disabled)
+                    {
+                        <form method="post" asp-page-handler="Enable" class="d-inline">
+                            <input type="hidden" name="id" value="@u.Id" />
+                            <button type="submit" class="btn btn-link p-0 align-baseline">Enable</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form method="post" asp-page-handler="Disable" class="d-inline">
+                            <input type="hidden" name="id" value="@u.Id" />
+                            <button type="submit" class="btn btn-link text-danger p-0 align-baseline">Disable</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
