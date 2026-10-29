@@ -44,6 +44,26 @@ public class TwilioOptOutPollService
     }
 
     /// <summary>
+    /// Returns the single tracked <see cref="OptOutSyncState"/> row (Id = 1), creating it only when
+    /// neither the change tracker nor the database already has one. Safe to call multiple times
+    /// on the same <see cref="ApplicationDbContext"/> (e.g. before- and after-send polls).
+    /// </summary>
+    internal async Task<OptOutSyncState> EnsureSyncStateAsync(CancellationToken cancellationToken = default)
+    {
+        // FindAsync checks the local tracker first, then the database — avoids a second Add
+        // when a prior PollAsync in this request already tracked Id = 1 (saved or not).
+        var state = await _db.OptOutSyncStates.FindAsync([1], cancellationToken);
+        if (state is not null)
+        {
+            return state;
+        }
+
+        state = new OptOutSyncState { Id = 1 };
+        _db.OptOutSyncStates.Add(state);
+        return state;
+    }
+
+    /// <summary>
     /// Lists Messages sent <em>to</em> our From number since the last poll (inbound replies),
     /// applies STOP keywords, and advances <see cref="OptOutSyncState.LastPolledAt"/>.
     /// </summary>
@@ -56,12 +76,7 @@ public class TwilioOptOutPollService
             return new OptOutPollResult(0, 0, polledAt, polledAt, "Twilio is not configured.");
         }
 
-        var state = await _db.OptOutSyncStates.FirstOrDefaultAsync(cancellationToken);
-        if (state is null)
-        {
-            state = new OptOutSyncState { Id = 1 };
-            _db.OptOutSyncStates.Add(state);
-        }
+        var state = await EnsureSyncStateAsync(cancellationToken);
 
         var lookbackFrom = state.LastPolledAt?.UtcDateTime
             ?? polledAt.UtcDateTime.Subtract(DefaultLookback);
