@@ -27,8 +27,6 @@ public class IndexModel : PageModel
     public int ActiveRecipientCount { get; set; }
     public int SkippedInvalidPhoneCount { get; set; }
     public bool TwilioConfigured { get; set; }
-    public DateTimeOffset? LastOptOutPollAt { get; set; }
-    public OptOutPollResult? LastPollResult { get; set; }
     public IReadOnlyList<SmsSendResult>? Results { get; set; }
 
     public class InputModel
@@ -42,44 +40,17 @@ public class IndexModel : PageModel
         public bool ConfirmSend { get; set; }
     }
 
-    public async Task OnGetAsync(CancellationToken cancellationToken)
+    public async Task OnGetAsync()
     {
-        // Sync STOP opt-outs from Twilio before showing recipient counts.
-        if (_smsSender.IsConfigured)
-        {
-            LastPollResult = await _optOutPoll.PollAsync(cancellationToken);
-            if (LastPollResult.Error is null && LastPollResult.OptOutsApplied > 0)
-            {
-                TempData["StatusMessage"] =
-                    $"Synced opt-outs: marked {LastPollResult.OptOutsApplied} employee(s) inactive.";
-            }
-        }
-
         await LoadCountsAsync();
-    }
-
-    public async Task<IActionResult> OnPostSyncOptOutsAsync(CancellationToken cancellationToken)
-    {
-        LastPollResult = await _optOutPoll.PollAsync(cancellationToken);
-        if (LastPollResult.Error is not null)
-        {
-            TempData["ErrorMessage"] = $"Opt-out sync failed: {LastPollResult.Error}";
-        }
-        else
-        {
-            TempData["StatusMessage"] =
-                $"Opt-out sync complete. Inbound scanned: {LastPollResult.InboundMessagesScanned}; newly opted out: {LastPollResult.OptOutsApplied}.";
-        }
-
-        return RedirectToPage();
     }
 
     public async Task<IActionResult> OnPostAsync(CancellationToken cancellationToken)
     {
-        // Refresh opt-outs immediately before sending so STOPs since last visit are honored.
+        // Poll STOP opt-outs immediately before send so newly opted-out people are skipped.
         if (_smsSender.IsConfigured)
         {
-            LastPollResult = await _optOutPoll.PollAsync(cancellationToken);
+            await _optOutPoll.PollAsync(cancellationToken);
         }
 
         await LoadCountsAsync();
@@ -130,11 +101,10 @@ public class IndexModel : PageModel
 
         Results = await _smsSender.SendIndividualAsync(Input.Message.Trim(), recipients, cancellationToken);
 
-        // Poll again after send in case replies arrive quickly (also advances the watermark).
+        // Optional after-send poll advances the watermark if any quick replies arrived.
         if (_smsSender.IsConfigured)
         {
             await _optOutPoll.PollAsync(cancellationToken);
-            LastOptOutPollAt = await _optOutPoll.GetLastPolledAtAsync(cancellationToken);
         }
 
         return Page();
@@ -143,7 +113,6 @@ public class IndexModel : PageModel
     private async Task LoadCountsAsync()
     {
         TwilioConfigured = _smsSender.IsConfigured;
-        LastOptOutPollAt = await _optOutPoll.GetLastPolledAtAsync();
 
         var active = await _db.Employees
             .AsNoTracking()

@@ -87,11 +87,9 @@ When an inbound body matches **STOP** / `STOPALL` / `UNSUBSCRIBE` / `CANCEL` / `
 
 | Trigger | Behavior |
 | --- | --- |
-| Open **Compose** | Polls before showing recipient counts |
-| Click **Sync STOP opt-outs** | Manual poll |
-| Click **Send individual SMS** | Polls immediately before building the recipient list, then again after send |
+| Click **Send individual SMS** | Polls immediately before building the recipient list (skips newly opted-out people), then optionally again after send |
 
-Lookback: since `OptOutSyncState.LastPolledAt`, or **7 days** on the first run. No Twilio Console webhook URL is required (and none should be exposed for this app).
+There is no manual sync UI and no poll when merely opening Compose. Lookback: since `OptOutSyncState.LastPolledAt`, or **7 days** on the first run. No Twilio Console webhook URL is required (and none should be exposed for this app).
 
 ### Connection string (SQLite → another store)
 
@@ -158,7 +156,7 @@ Ensure the app pool identity can write the SQLite file directory.
 
 ## Project layout
 
-- `Pages/Compose` — message + send status; polls Twilio for STOP opt-outs
+- `Pages/Compose` — message + send status; polls Twilio for STOP opt-outs on send only
 - `Pages/Employees` — CRUD + search + opt-out timestamp
 - `Pages/Admin/Users` — admin-only login management
 - `Services/TwilioOptOutPollService.cs` — MessageResource.Read poll for inbound STOP
