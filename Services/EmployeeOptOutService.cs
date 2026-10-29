@@ -42,7 +42,7 @@ public class EmployeeOptOutService
 
         var now = DateTimeOffset.UtcNow;
         match.IsActive = false;
-        match.OptedOutAt = now;
+        match.OptedOutAt ??= now; // keep first opt-out timestamp
         match.UpdatedAt = now;
         await _db.SaveChangesAsync(cancellationToken);
 

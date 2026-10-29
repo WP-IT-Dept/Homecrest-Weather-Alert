@@ -13,6 +13,8 @@ public class ApplicationDbContext : IdentityDbContext
 
     public DbSet<Employee> Employees => Set<Employee>();
 
+    public DbSet<OptOutSyncState> OptOutSyncStates => Set<OptOutSyncState>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -22,6 +24,11 @@ public class ApplicationDbContext : IdentityDbContext
             entity.HasIndex(e => e.Name);
             entity.HasIndex(e => e.Phone);
             entity.HasIndex(e => e.PhoneE164);
+        });
+
+        builder.Entity<OptOutSyncState>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedNever();
         });
     }
 }

@@ -60,6 +60,19 @@ namespace HomecrestWeatherAlert.Data.Migrations
                     b.ToTable("Employees");
                 });
 
+            modelBuilder.Entity("HomecrestWeatherAlert.Models.OptOutSyncState", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset?>("LastPolledAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OptOutSyncStates");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")

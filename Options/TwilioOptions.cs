@@ -14,8 +14,8 @@ public class TwilioOptions
     public string ApiSecret { get; set; } = string.Empty;
 
     /// <summary>
-    /// Account Auth Token. Used to validate inbound webhook signatures (RequestValidator).
-    /// Also a temporary send fallback when ApiKey/ApiSecret are not set.
+    /// Account Auth Token — optional send fallback when ApiKey/ApiSecret are not set.
+    /// Prefer API key authentication (key needs permission to send and read Messages).
     /// </summary>
     public string AuthToken { get; set; } = string.Empty;
 
