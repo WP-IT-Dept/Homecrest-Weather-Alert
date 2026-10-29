@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using HomecrestWeatherAlert.Data;
+using HomecrestWeatherAlert.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -9,11 +10,20 @@ namespace HomecrestWeatherAlert.Pages.Admin.Users;
 public class CreateModel : PageModel
 {
     private readonly UserManager<IdentityUser> _userManager;
+    private readonly PasswordResetEmailHelper _passwordEmails;
+    private readonly ILogger<CreateModel> _logger;
 
-    public CreateModel(UserManager<IdentityUser> userManager)
+    public CreateModel(
+        UserManager<IdentityUser> userManager,
+        PasswordResetEmailHelper passwordEmails,
+        ILogger<CreateModel> logger)
     {
         _userManager = userManager;
+        _passwordEmails = passwordEmails;
+        _logger = logger;
     }
+
+    public bool EmailConfigured => _passwordEmails.IsEmailConfigured;
 
     [BindProperty]
     public InputModel Input { get; set; } = new();
@@ -32,6 +42,9 @@ public class CreateModel : PageModel
 
         [Display(Name = "Admin role")]
         public bool IsAdmin { get; set; }
+
+        [Display(Name = "Email welcome + password reset link")]
+        public bool SendWelcomeEmail { get; set; }
     }
 
     public void OnGet()
@@ -69,7 +82,30 @@ public class CreateModel : PageModel
             await _userManager.AddToRoleAsync(user, SeedData.AdminRole);
         }
 
-        TempData["StatusMessage"] = $"Created user {user.Email}.";
+        var message = $"Created user {user.Email}.";
+        if (Input.SendWelcomeEmail)
+        {
+            if (!_passwordEmails.IsEmailConfigured)
+            {
+                TempData["ErrorMessage"] =
+                    message + " Welcome email was not sent — configure Exchange Online under Integrations.";
+                return RedirectToPage("./Index");
+            }
+
+            try
+            {
+                await _passwordEmails.SendAccountCreatedAsync(user);
+                message += " Welcome email sent.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send welcome email to {Email}.", user.Email);
+                TempData["ErrorMessage"] = message + $" Welcome email failed: {ex.Message}";
+                return RedirectToPage("./Index");
+            }
+        }
+
+        TempData["StatusMessage"] = message;
         return RedirectToPage("./Index");
     }
 }

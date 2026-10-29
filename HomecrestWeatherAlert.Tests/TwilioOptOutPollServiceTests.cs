@@ -1,10 +1,12 @@
 using HomecrestWeatherAlert.Data;
 using HomecrestWeatherAlert.Models;
-using HomecrestWeatherAlert.Options;
 using HomecrestWeatherAlert.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace HomecrestWeatherAlert.Tests;
 
@@ -54,11 +56,10 @@ public class TwilioOptOutPollServiceTests
 
     private static TwilioOptOutPollService CreateService(ApplicationDbContext db)
     {
-        var options = Microsoft.Extensions.Options.Options.Create(new TwilioOptions());
         return new TwilioOptOutPollService(
             db,
             new EmployeeOptOutService(db, NullLogger<EmployeeOptOutService>.Instance),
-            options,
+            TestIntegrations.CreateSettings(),
             NullLogger<TwilioOptOutPollService>.Instance);
     }
 
@@ -70,5 +71,35 @@ public class TwilioOptOutPollServiceTests
         var db = new ApplicationDbContext(options);
         db.Database.EnsureCreated();
         return db;
+    }
+}
+
+internal static class TestIntegrations
+{
+    public static IntegrationsSettingsService CreateSettings(IDictionary<string, string?>? config = null)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "hwa-integrations-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(config ?? new Dictionary<string, string?>())
+            .Build();
+
+        IHostEnvironment env = new TestHostEnvironment { ContentRootPath = root };
+
+        var protection = DataProtectionProvider.Create(Path.Combine(root, "keys"));
+        return new IntegrationsSettingsService(
+            configuration,
+            protection,
+            env,
+            NullLogger<IntegrationsSettingsService>.Instance);
+    }
+
+    private sealed class TestHostEnvironment : IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = Environments.Development;
+        public string ApplicationName { get; set; } = "HomecrestWeatherAlert.Tests";
+        public string ContentRootPath { get; set; } = string.Empty;
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 }
