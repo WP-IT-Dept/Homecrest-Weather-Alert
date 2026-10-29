@@ -30,7 +30,7 @@
         <label asp-for="Input.Message" class="form-label"></label>
         <textarea asp-for="Input.Message" class="form-control" rows="6" maxlength="1600"></textarea>
         <span asp-validation-for="Input.Message" class="text-danger"></span>
-        <div class="form-text">Manual message only (no weather API in v1). Keep it short for SMS.</div>
+        <div class="form-text">Manual message only (no weather API in v1). Keep it short for SMS. STOP opt-outs are checked automatically before each send.</div>
     </div>
 
     <div class="form-check mb-3">

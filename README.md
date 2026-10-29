@@ -5,10 +5,10 @@ Internal ASP.NET Core (Razor Pages) app for Homecrest staff to compose weather a
 ## Features
 
 - Cookie authentication (ASP.NET Core Identity) with roles **User** and **Admin**
-- Compose & send: one Twilio `MessageResource.Create` **per recipient** (never group SMS)
-- Employee directory: searchable name + phone CRUD; US numbers normalized to E.164
+- Compose & send: one Twilio `MessageResource.Create` **per recipient** (never group SMS); only **active** employees are messaged
+- Employee directory: searchable name + phone CRUD; US → E.164; SMS **STOP** opt-out (via Twilio Message **poll**, not a public webhook) sets inactive and records `OptedOutAt`
 - Admin user management: create, disable/enable, reset password, grant/revoke **Admin** role (Admin-only). The seed account `admin@homecrest.local` cannot be disabled or demoted.
-- Twilio Account SID, Auth Token, and From number are **config-only** (swap trial → production From without code changes)
+- Twilio Account SID, API Key + secret, Auth Token (webhook signatures), and From number are **config-only**
 
 ## Requirements
 
@@ -64,11 +64,32 @@ export HOMECREST_ADMIN_PASSWORD='YourStrong!Pass1'
 | Config key | Env var | Notes |
 | --- | --- | --- |
 | `Twilio:AccountSid` | `Twilio__AccountSid` | Account SID (`AC…`) |
-| `Twilio:ApiKey` | `Twilio__ApiKey` | API Key SID (`SK…`) |
+| `Twilio:ApiKey` | `Twilio__ApiKey` | API Key SID (`SK…`) — preferred for send **and** Message reads |
 | `Twilio:ApiSecret` | `Twilio__ApiSecret` | API Key secret |
+| `Twilio:AuthToken` | `Twilio__AuthToken` | Optional send fallback if API key unset |
 | `Twilio:FromNumber` | `Twilio__FromNumber` | E.164 From number |
 
-`Twilio:AuthToken` / `Twilio__AuthToken` is **not required**. If both API key and Auth Token are present, the app uses the API key. Auth Token remains a temporary fallback only.
+If both API key and Auth Token are present for sending, the app uses the **API key**.
+
+**API key permissions:** the key must be allowed to **create Messages** (send) and **list/read Messages** (opt-out poll). A Standard key on the account that owns the From number is sufficient.
+
+### STOP / opt-out (Twilio poll — no public webhook)
+
+There is **no inbound webhook**. The app polls Twilio’s Messages API for inbound SMS **to** the From number.
+
+When an inbound body matches **STOP** / `STOPALL` / `UNSUBSCRIBE` / `CANCEL` / `END` / `QUIT` (case-insensitive):
+
+1. Match `From` → employee phone (E.164)
+2. Set `IsActive = false` and `OptedOutAt` (UTC, first opt-out kept)
+3. Compose skips inactive employees
+
+**When the poll runs**
+
+| Trigger | Behavior |
+| --- | --- |
+| Click **Send individual SMS** | Polls immediately before building the recipient list (skips newly opted-out people), then optionally again after send |
+
+There is no manual sync UI and no poll when merely opening Compose. Lookback: since `OptOutSyncState.LastPolledAt`, or **7 days** on the first run. No Twilio Console webhook URL is required (and none should be exposed for this app).
 
 ### Connection string (SQLite → another store)
 
@@ -118,10 +139,12 @@ Ensure the app pool identity can write the SQLite file directory.
    - `Twilio__ApiKey`
    - `Twilio__ApiSecret`
    - `Twilio__FromNumber`
+   - Optional: `Twilio__AuthToken` (send fallback only)
    - `HOMECREST_ADMIN_PASSWORD` (first run only, if not already seeded)
    - Optional: `ConnectionStrings__DefaultConnection`, `ASPNETCORE_ENVIRONMENT=Production`
 6. Grant the app pool identity **Modify** on the folder that holds `app.db` (or your configured data path).
 7. Bind HTTPS with a certificate; keep HTTP→HTTPS redirect enabled by the app.
+8. **Do not** configure a public inbound SMS webhook for this app — opt-outs are polled outbound via the Messages API.
 
 `web.config` in the repo shows the ANCM `inprocess` hosting model. Published output includes a generated `web.config` as well.
 
@@ -133,9 +156,10 @@ Ensure the app pool identity can write the SQLite file directory.
 
 ## Project layout
 
-- `Pages/Compose` — message + send status
-- `Pages/Employees` — CRUD + search
+- `Pages/Compose` — message + send status; polls Twilio for STOP opt-outs on send only
+- `Pages/Employees` — CRUD + search + opt-out timestamp
 - `Pages/Admin/Users` — admin-only login management
+- `Services/TwilioOptOutPollService.cs` — MessageResource.Read poll for inbound STOP
 - `Services/TwilioSmsSender.cs` — one Create per recipient
 - `Services/PhoneNormalizer.cs` — US → E.164
 - `Data/SeedData.cs` — roles + default admin

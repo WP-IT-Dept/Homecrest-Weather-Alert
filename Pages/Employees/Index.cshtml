@@ -35,13 +35,14 @@
                 <th>Phone</th>
                 <th>E.164</th>
                 <th>Active</th>
+                <th>Opted out</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
         @if (Model.Employees.Count == 0)
         {
-            <tr><td colspan="5" class="text-muted">No employees found.</td></tr>
+            <tr><td colspan="6" class="text-muted">No employees found.</td></tr>
         }
         @foreach (var e in Model.Employees)
         {
@@ -50,6 +51,9 @@
                 <td>@e.Phone</td>
                 <td class="small text-muted">@(e.PhoneE164 ?? "—")</td>
                 <td>@(e.IsActive ? "Yes" : "No")</td>
+                <td class="small text-muted">
+                    @(e.OptedOutAt.HasValue ? e.OptedOutAt.Value.UtcDateTime.ToString("yyyy-MM-dd HH:mm") + " UTC" : "—")
+                </td>
                 <td class="text-nowrap">
                     <a asp-page="Edit" asp-route-id="@e.Id">Edit</a>
                     <span class="text-muted">|</span>

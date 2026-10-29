@@ -34,6 +34,9 @@ namespace HomecrestWeatherAlert.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset?>("OptedOutAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -55,6 +58,19 @@ namespace HomecrestWeatherAlert.Data.Migrations
                     b.HasIndex("PhoneE164");
 
                     b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("HomecrestWeatherAlert.Models.OptOutSyncState", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset?>("LastPolledAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OptOutSyncStates");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

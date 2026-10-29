@@ -14,8 +14,8 @@ public class TwilioOptions
     public string ApiSecret { get; set; } = string.Empty;
 
     /// <summary>
-    /// Legacy Auth Token. Optional fallback only when ApiKey/ApiSecret are not set.
-    /// Prefer API key authentication for sending.
+    /// Account Auth Token — optional send fallback when ApiKey/ApiSecret are not set.
+    /// Prefer API key authentication (key needs permission to send and read Messages).
     /// </summary>
     public string AuthToken { get; set; } = string.Empty;
 

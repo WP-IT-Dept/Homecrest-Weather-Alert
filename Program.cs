@@ -38,6 +38,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.Configure<TwilioOptions>(builder.Configuration.GetSection(TwilioOptions.SectionName));
 builder.Services.AddSingleton<ISmsSender, TwilioSmsSender>();
+builder.Services.AddScoped<EmployeeOptOutService>();
+builder.Services.AddScoped<TwilioOptOutPollService>();
 
 builder.Services.AddRazorPages(options =>
 {

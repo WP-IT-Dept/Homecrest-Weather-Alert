@@ -25,9 +25,16 @@
     <div class="mb-3">
         <label asp-for="Input.IsActive" class="form-label"></label>
         <select asp-for="Input.IsActive" class="form-select" asp-items="Model.ActiveOptions"></select>
-        <div class="form-text">Set Inactive only for leavers / HR removal. Login and app startup never change this.</div>
+        <div class="form-text">Set Inactive for leavers / HR removal, or after an SMS STOP opt-out. Setting Active clears the opt-out timestamp.</div>
         <span asp-validation-for="Input.IsActive" class="text-danger"></span>
     </div>
+
+    @if (Model.OptedOutAt.HasValue)
+    {
+        <div class="alert alert-warning py-2">
+            Opted out via SMS at <strong>@Model.OptedOutAt.Value.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss") UTC</strong>.
+        </div>
+    }
 
     <button type="submit" class="btn btn-primary">Save</button>
     <a asp-page="./Index" class="btn btn-link">Cancel</a>

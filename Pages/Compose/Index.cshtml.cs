@@ -12,11 +12,13 @@ public class IndexModel : PageModel
 {
     private readonly ApplicationDbContext _db;
     private readonly ISmsSender _smsSender;
+    private readonly TwilioOptOutPollService _optOutPoll;
 
-    public IndexModel(ApplicationDbContext db, ISmsSender smsSender)
+    public IndexModel(ApplicationDbContext db, ISmsSender smsSender, TwilioOptOutPollService optOutPoll)
     {
         _db = db;
         _smsSender = smsSender;
+        _optOutPoll = optOutPoll;
     }
 
     [BindProperty]
@@ -45,6 +47,12 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostAsync(CancellationToken cancellationToken)
     {
+        // Poll STOP opt-outs immediately before send so newly opted-out people are skipped.
+        if (_smsSender.IsConfigured)
+        {
+            await _optOutPoll.PollAsync(cancellationToken);
+        }
+
         await LoadCountsAsync();
 
         if (!ModelState.IsValid)
@@ -92,6 +100,13 @@ public class IndexModel : PageModel
         }
 
         Results = await _smsSender.SendIndividualAsync(Input.Message.Trim(), recipients, cancellationToken);
+
+        // Optional after-send poll advances the watermark if any quick replies arrived.
+        if (_smsSender.IsConfigured)
+        {
+            await _optOutPoll.PollAsync(cancellationToken);
+        }
+
         return Page();
     }
 
