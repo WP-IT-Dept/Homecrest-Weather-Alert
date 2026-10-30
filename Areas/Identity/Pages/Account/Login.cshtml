@@ -1,0 +1,45 @@
+@page
+@model HomecrestWeatherAlert.Areas.Identity.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+    Layout = "/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="hc-auth">
+    <div class="hc-auth-card">
+        <p class="hc-auth-eyebrow">Homecrest Outdoor Living</p>
+        <h1 class="hc-auth-title">Weather Alert</h1>
+        <p class="hc-auth-lead">Sign in with your Homecrest account. New logins are created by an administrator.</p>
+
+        <form id="account" method="post" class="hc-auth-form">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Email" class="form-label"></label>
+                <input asp-for="Input.Email" class="form-control form-control-lg" autocomplete="username" aria-required="true" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Input.Password" class="form-label"></label>
+                <input asp-for="Input.Password" class="form-control form-control-lg" autocomplete="current-password" aria-required="true" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-check mb-4">
+                <input class="form-check-input" asp-for="Input.RememberMe" />
+                <label class="form-check-label" asp-for="Input.RememberMe"></label>
+            </div>
+
+            <button id="login-submit" type="submit" class="btn btn-hc-primary btn-lg w-100">Sign in</button>
+
+            <p class="hc-auth-footer-link mt-3 mb-0">
+                <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

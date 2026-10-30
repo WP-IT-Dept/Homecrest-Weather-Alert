@@ -1,5 +1,31 @@
+/* Homecrest Weather Alert — brand tokens aligned with https://www.homecrest.com */
+:root {
+  --hc-black: #000000;
+  --hc-white: #ffffff;
+  --hc-tan: #a48664;
+  --hc-light-tan: #d8d1ca;
+  --hc-dark-blue: #032f47;
+  --hc-slate: #45515e;
+  --hc-slate-soft: #4a6a83;
+  --hc-header-bg: #fafafa;
+  --hc-accent: #71685c;
+  --hc-accent-deep: #60584a;
+  --hc-border: #e5e5e5;
+  --hc-text: #333333;
+  --hc-text-muted: #666666;
+  --hc-surface: #ffffff;
+  --hc-page-bg: #f3f1ee;
+  --hc-focus: #4a6a83;
+  --hc-font-sans: "Nunito Sans", "Nunito", system-ui, sans-serif;
+  --hc-font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --hc-radius: 2px;
+  --hc-shadow: 0 12px 40px rgba(3, 47, 71, 0.08);
+}
+
 html {
-  font-size: 14px;
+  font-size: 15px;
+  position: relative;
+  min-height: 100%;
 }
 
 @media (min-width: 768px) {
@@ -8,15 +34,224 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
 body {
-  margin-bottom: 60px;
+  margin: 0;
+  margin-bottom: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--hc-font-sans);
+  color: var(--hc-text);
+  background:
+    linear-gradient(180deg, rgba(3, 47, 71, 0.04) 0%, transparent 280px),
+    var(--hc-page-bg);
+}
+
+a {
+  color: var(--hc-slate-soft);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+
+a:hover {
+  color: var(--hc-dark-blue);
+}
+
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem var(--hc-white), 0 0 0 0.25rem rgba(74, 106, 131, 0.45);
+}
+
+.form-control,
+.form-select {
+  border-radius: var(--hc-radius);
+  border-color: #cfc8c0;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--hc-slate-soft);
+}
+
+.btn {
+  border-radius: var(--hc-radius);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.btn-hc-primary,
+.btn-primary {
+  color: var(--hc-white);
+  background-color: var(--hc-dark-blue);
+  border-color: var(--hc-dark-blue);
+}
+
+.btn-hc-primary:hover,
+.btn-primary:hover,
+.btn-hc-primary:focus,
+.btn-primary:focus {
+  color: var(--hc-white);
+  background-color: var(--hc-slate);
+  border-color: var(--hc-slate);
+}
+
+.btn-outline-secondary {
+  color: var(--hc-slate);
+  border-color: var(--hc-accent);
+}
+
+.btn-outline-secondary:hover {
+  color: var(--hc-white);
+  background-color: var(--hc-accent);
+  border-color: var(--hc-accent);
+}
+
+.btn-link {
+  color: var(--hc-slate-soft);
+}
+
+/* Header — light bar + slate accent rule, echoing Homecrest.com */
+.hc-site-header {
+  background: var(--hc-header-bg);
+  border-bottom: 3px solid var(--hc-slate);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.hc-site-header .navbar {
+  padding-top: 0.85rem;
+  padding-bottom: 0.85rem;
+}
+
+.hc-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  text-decoration: none !important;
+  line-height: 1.1;
+}
+
+.hc-brand-mark {
+  font-family: var(--hc-font-display);
+  font-weight: 600;
+  font-size: 1.35rem;
+  color: var(--hc-dark-blue);
+  letter-spacing: 0.01em;
+}
+
+.hc-brand-sub {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--hc-tan);
+  font-weight: 700;
+}
+
+.hc-nav .nav-link {
+  color: var(--hc-text) !important;
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+  padding: 0.4rem 0.75rem !important;
+}
+
+.hc-nav .nav-link:hover {
+  color: var(--hc-dark-blue) !important;
+}
+
+.hc-nav .navbar-toggler {
+  border-color: var(--hc-light-tan);
+}
+
+.hc-main {
+  flex: 1 0 auto;
+  padding-top: 1.75rem;
+  padding-bottom: 3rem;
+}
+
+.hc-main h1,
+.hc-main .h3,
+.hc-main .h5 {
+  font-family: var(--hc-font-display);
+  color: var(--hc-dark-blue);
+  font-weight: 600;
+}
+
+.hc-main .text-muted,
+.form-text {
+  color: var(--hc-text-muted) !important;
+}
+
+.table {
+  --bs-table-bg: var(--hc-surface);
+  border-color: var(--hc-border);
+}
+
+.table thead th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--hc-slate);
+  border-bottom-color: var(--hc-accent);
+}
+
+.alert {
+  border-radius: var(--hc-radius);
+}
+
+.hc-site-footer {
+  flex-shrink: 0;
+  background: var(--hc-dark-blue);
+  color: var(--hc-light-tan);
+  padding: 1.25rem 0;
+  font-size: 0.9rem;
+}
+
+.hc-site-footer a {
+  color: var(--hc-white);
+}
+
+/* Login / auth surfaces */
+.hc-auth {
+  min-height: calc(100vh - 12rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0 2rem;
+}
+
+.hc-auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--hc-surface);
+  border-top: 3px solid var(--hc-slate);
+  box-shadow: var(--hc-shadow);
+  padding: 2.25rem 2rem 2rem;
+}
+
+.hc-auth-eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hc-tan);
+}
+
+.hc-auth-title {
+  font-family: var(--hc-font-display);
+  font-size: 2rem;
+  color: var(--hc-dark-blue);
+  margin: 0 0 0.75rem;
+}
+
+.hc-auth-lead {
+  color: var(--hc-text-muted);
+  margin-bottom: 1.5rem;
+}
+
+.hc-auth-footer-link a {
+  font-size: 0.92rem;
 }

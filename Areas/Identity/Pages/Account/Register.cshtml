@@ -1,6 +1,16 @@
 @page
 @model HomecrestWeatherAlert.Areas.Identity.Pages.Account.RegisterModel
 @{
-    ViewData["Title"] = "Register disabled";
+    ViewData["Title"] = "Registration disabled";
 }
-<p>Self-registration is disabled. Contact an administrator for an account.</p>
+
+<div class="hc-auth">
+    <div class="hc-auth-card">
+        <h1 class="hc-auth-title">Registration is closed</h1>
+        <p class="hc-auth-lead">
+            Public self-registration is not available. Ask a Homecrest administrator to create your login under
+            <strong>Users</strong>.
+        </p>
+        <a class="btn btn-hc-primary" asp-page="./Login">Back to sign in</a>
+    </div>
+</div>
