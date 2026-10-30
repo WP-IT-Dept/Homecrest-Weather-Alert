@@ -4,36 +4,42 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Homecrest Weather Alert</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,400..800;1,6..12,400..800&family=Source+Serif+4:opsz,wght@8..60,500..700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/HomecrestWeatherAlert.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+    <header class="hc-site-header">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Compose/Index">Homecrest Weather Alert</a>
+                <a class="hc-brand navbar-brand" asp-area="" asp-page="/Compose/Index">
+                    <span class="hc-brand-mark">Homecrest</span>
+                    <span class="hc-brand-sub">Weather Alert</span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                    <ul class="navbar-nav flex-grow-1 hc-nav">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/Compose/Index">Compose</a>
+                                <a class="nav-link" asp-area="" asp-page="/Compose/Index">Compose</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/Employees/Index">Employees</a>
+                                <a class="nav-link" asp-area="" asp-page="/Employees/Index">Employees</a>
                             </li>
                             @if (User.IsInRole("Admin"))
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-page="/Admin/Users/Index">Users</a>
+                                    <a class="nav-link" asp-area="" asp-page="/Admin/Users/Index">Users</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-page="/Admin/Config/Index">Integrations</a>
+                                    <a class="nav-link" asp-area="" asp-page="/Admin/Config/Index">Integrations</a>
                                 </li>
                             }
                         }
@@ -43,15 +49,15 @@
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+    <div class="container hc-main">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="hc-site-footer">
         <div class="container">
-            &copy; @DateTime.UtcNow.Year - Homecrest Weather Alert (internal)
+            &copy; @DateTime.UtcNow.Year Homecrest Outdoor Living — Weather Alert (internal)
         </div>
     </footer>
 
