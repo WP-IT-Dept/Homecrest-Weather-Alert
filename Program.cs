@@ -49,6 +49,7 @@ builder.Services.AddSingleton<IEmailSender>(sp => sp.GetRequiredService<GraphEma
 builder.Services.AddScoped<PasswordResetEmailHelper>();
 builder.Services.AddSingleton<ISmsSender, TwilioSmsSender>();
 builder.Services.AddScoped<EmployeeOptOutService>();
+builder.Services.AddScoped<EmployeeCsvImporter>();
 builder.Services.AddScoped<TwilioOptOutPollService>();
 
 builder.Services.AddRazorPages(options =>
