@@ -33,6 +33,14 @@ Override email with `Seed:AdminEmail` if needed.
 
 Public self-registration is disabled; only admins create logins under **Users**.
 
+Auth cookie: **sliding** expiration, **30 minutes** (`ConfigureApplicationCookie`). Idle users are signed out after 30 minutes with no requests.
+
+### Microsoft Graph / Exchange Online (email)
+
+For password-reset and welcome email (when the Exchange Online Integrations feature is deployed), create an Entra app registration with Graph **Mail.Send** (application) and admin consent. Step-by-step:
+
+**[docs/graph-enterprise-app-setup.md](docs/graph-enterprise-app-setup.md)** — app registration, client secret, sender mailbox, optional Application Access Policy, IIS / Admin Integrations values.
+
 ## Local run
 
 ```bash
