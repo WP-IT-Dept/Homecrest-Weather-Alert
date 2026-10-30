@@ -1,6 +1,5 @@
 using HomecrestWeatherAlert.Models;
 using HomecrestWeatherAlert.Options;
-using Microsoft.Extensions.Options;
 using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
@@ -9,30 +8,31 @@ namespace HomecrestWeatherAlert.Services;
 
 public class TwilioSmsSender : ISmsSender
 {
-    private readonly TwilioOptions _options;
+    private readonly IntegrationsSettingsService _settings;
     private readonly ILogger<TwilioSmsSender> _logger;
 
-    public TwilioSmsSender(IOptions<TwilioOptions> options, ILogger<TwilioSmsSender> logger)
+    public TwilioSmsSender(IntegrationsSettingsService settings, ILogger<TwilioSmsSender> logger)
     {
-        _options = options.Value;
+        _settings = settings;
         _logger = logger;
     }
 
-    public bool IsConfigured => _options.IsConfigured;
+    public bool IsConfigured => _settings.GetTwilio().IsConfigured;
 
     public async Task<IReadOnlyList<SmsSendResult>> SendIndividualAsync(
         string body,
         IEnumerable<(int EmployeeId, string Name, string PhoneE164)> recipients,
         CancellationToken cancellationToken = default)
     {
-        if (!IsConfigured)
+        var options = _settings.GetTwilio();
+        if (!options.IsConfigured)
         {
             throw new InvalidOperationException(
-                "Twilio is not configured. Set Twilio:AccountSid, Twilio:ApiKey, Twilio:ApiSecret, and Twilio:FromNumber via User Secrets, environment variables, or appsettings.");
+                "Twilio is not configured. Set credentials under Admin → Integrations (or Twilio__* env / User Secrets).");
         }
 
-        InitializeTwilioClient(_options, _logger);
-        var from = new PhoneNumber(_options.FromNumber);
+        InitializeTwilioClient(options, _logger);
+        var from = new PhoneNumber(options.FromNumber);
         var results = new List<SmsSendResult>();
 
         foreach (var recipient in recipients)

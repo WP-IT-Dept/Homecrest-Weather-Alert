@@ -27,6 +27,22 @@
         <label asp-for="Input.IsAdmin" class="form-check-label"></label>
     </div>
 
+    <div class="form-check mb-3">
+        @if (Model.EmailConfigured)
+        {
+            <input asp-for="Input.SendWelcomeEmail" class="form-check-input" />
+        }
+        else
+        {
+            <input asp-for="Input.SendWelcomeEmail" class="form-check-input" disabled />
+        }
+        <label asp-for="Input.SendWelcomeEmail" class="form-check-label"></label>
+        @if (!Model.EmailConfigured)
+        {
+            <div class="form-text">Configure Exchange Online under <a asp-page="/Admin/Config/Index">Integrations</a> to enable.</div>
+        }
+    </div>
+
     <button type="submit" class="btn btn-primary">Create</button>
     <a asp-page="./Index" class="btn btn-link">Cancel</a>
 </form>

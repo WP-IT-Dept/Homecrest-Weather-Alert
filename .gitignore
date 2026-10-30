@@ -21,6 +21,7 @@ secrets.json
 **/appsettings.*.local.json
 .env
 .env.*
+App_Data/
 
 ## OS / IDE
 .DS_Store

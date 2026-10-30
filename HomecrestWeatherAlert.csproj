@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Identity" Version="1.13.2" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.33" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.33" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.33" />
@@ -28,6 +29,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.33" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.33" />
+    <PackageReference Include="Microsoft.Graph" Version="5.77.0" />
     <PackageReference Include="Twilio" Version="7.8.5" />
   </ItemGroup>
 

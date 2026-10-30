@@ -1,8 +1,6 @@
 using HomecrestWeatherAlert.Data;
 using HomecrestWeatherAlert.Models;
-using HomecrestWeatherAlert.Options;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
 
@@ -22,18 +20,18 @@ public class TwilioOptOutPollService
 
     private readonly ApplicationDbContext _db;
     private readonly EmployeeOptOutService _optOut;
-    private readonly TwilioOptions _options;
+    private readonly IntegrationsSettingsService _settings;
     private readonly ILogger<TwilioOptOutPollService> _logger;
 
     public TwilioOptOutPollService(
         ApplicationDbContext db,
         EmployeeOptOutService optOut,
-        IOptions<TwilioOptions> options,
+        IntegrationsSettingsService settings,
         ILogger<TwilioOptOutPollService> logger)
     {
         _db = db;
         _optOut = optOut;
-        _options = options.Value;
+        _settings = settings;
         _logger = logger;
     }
 
@@ -71,7 +69,8 @@ public class TwilioOptOutPollService
     {
         var polledAt = DateTimeOffset.UtcNow;
 
-        if (!_options.IsConfigured)
+        var options = _settings.GetTwilio();
+        if (!options.IsConfigured)
         {
             return new OptOutPollResult(0, 0, polledAt, polledAt, "Twilio is not configured.");
         }
@@ -83,11 +82,11 @@ public class TwilioOptOutPollService
 
         try
         {
-            TwilioSmsSender.InitializeTwilioClient(_options, _logger);
+            TwilioSmsSender.InitializeTwilioClient(options, _logger);
 
             // Messages addressed TO our Twilio number are inbound replies from employees.
             var messages = await MessageResource.ReadAsync(
-                to: new PhoneNumber(_options.FromNumber),
+                to: new PhoneNumber(options.FromNumber),
                 dateSentAfter: lookbackFrom,
                 limit: 1000);
 

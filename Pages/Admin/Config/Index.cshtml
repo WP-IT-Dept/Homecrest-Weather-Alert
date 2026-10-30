@@ -1,0 +1,116 @@
+@page
+@model HomecrestWeatherAlert.Pages.Admin.Config.IndexModel
+@{
+    ViewData["Title"] = "Integrations";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Integrations</h1>
+    <span class="badge @(Model.Status.OverlayFileExists ? "text-bg-success" : "text-bg-secondary")">
+        @(Model.Status.OverlayFileExists ? "Encrypted overlay present" : "Using appsettings / env only")
+    </span>
+</div>
+
+@if (TempData["StatusMessage"] is string status)
+{
+    <div class="alert alert-success">@status</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-warning">@error</div>
+}
+
+<p class="text-muted">
+    Secrets are stored with ASP.NET Core Data Protection under
+    <code>App_Data/integrations.protected</code> (not plaintext in SQLite).
+    Leave a masked secret blank or unchanged to keep the current value; paste a new value to rotate without redeploying.
+    Environment variables / User Secrets remain a baseline and are overridden by values saved here.
+</p>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <h2 class="h5">Exchange Online (Microsoft Graph)</h2>
+        <p class="small text-muted mb-2">
+            App-only <code>Mail.Send</code> as the sender mailbox.
+            Token scope: <code>https://graph.microsoft.com/.default</code>
+            (permission granted on the app registration — do not put secrets in scopes).
+            Status:
+            <strong>@(Model.Status.ExchangeConfigured ? "Configured" : "Incomplete")</strong>
+        </p>
+
+        <form method="post" asp-page-handler="SaveExchange" class="mb-3">
+            <div class="mb-2">
+                <label asp-for="Exchange.TenantId" class="form-label"></label>
+                <input asp-for="Exchange.TenantId" class="form-control" autocomplete="off" />
+            </div>
+            <div class="mb-2">
+                <label asp-for="Exchange.ClientId" class="form-label"></label>
+                <input asp-for="Exchange.ClientId" class="form-control" autocomplete="off" />
+            </div>
+            <div class="mb-2">
+                <label asp-for="Exchange.ClientSecret" class="form-label"></label>
+                <input asp-for="Exchange.ClientSecret" class="form-control" autocomplete="new-password" placeholder="Leave blank to keep current" />
+                <div class="form-text">Write-only. Shown as mask when a secret is already stored.</div>
+            </div>
+            <div class="mb-2">
+                <label asp-for="Exchange.SenderAddress" class="form-label"></label>
+                <input asp-for="Exchange.SenderAddress" class="form-control" placeholder="noreply@homecrest.com" />
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="Exchange.ClearClientSecret" class="form-check-input" />
+                <label asp-for="Exchange.ClearClientSecret" class="form-check-label"></label>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Exchange Online</button>
+        </form>
+
+        <form method="post" asp-page-handler="TestExchange" class="border-top pt-3">
+            <label asp-for="TestEmail.To" class="form-label"></label>
+            <div class="input-group mb-2">
+                <input asp-for="TestEmail.To" class="form-control" placeholder="you@homecrest.com (optional)" />
+                <button type="submit" class="btn btn-outline-secondary">Test connection</button>
+            </div>
+            <div class="form-text">Without a recipient, only acquires an app token. With a recipient, also sends a test email.</div>
+        </form>
+    </div>
+
+    <div class="col-lg-6">
+        <h2 class="h5">Twilio SMS</h2>
+        <p class="small text-muted mb-2">
+            Preferred: Account SID + API Key + API secret + From number.
+            Status:
+            <strong>@(Model.Status.TwilioConfigured ? "Configured" : "Incomplete")</strong>
+        </p>
+
+        <form method="post" asp-page-handler="SaveTwilio">
+            <div class="mb-2">
+                <label asp-for="Twilio.AccountSid" class="form-label"></label>
+                <input asp-for="Twilio.AccountSid" class="form-control" autocomplete="off" />
+            </div>
+            <div class="mb-2">
+                <label asp-for="Twilio.ApiKey" class="form-label"></label>
+                <input asp-for="Twilio.ApiKey" class="form-control" autocomplete="off" />
+            </div>
+            <div class="mb-2">
+                <label asp-for="Twilio.ApiSecret" class="form-label"></label>
+                <input asp-for="Twilio.ApiSecret" class="form-control" autocomplete="new-password" placeholder="Leave blank to keep current" />
+            </div>
+            <div class="mb-2">
+                <label asp-for="Twilio.FromNumber" class="form-label"></label>
+                <input asp-for="Twilio.FromNumber" class="form-control" placeholder="+1…" />
+            </div>
+            <div class="mb-2">
+                <label asp-for="Twilio.AuthToken" class="form-label"></label>
+                <input asp-for="Twilio.AuthToken" class="form-control" autocomplete="new-password" placeholder="Optional; leave blank to keep" />
+            </div>
+            <div class="form-check mb-1">
+                <input asp-for="Twilio.ClearApiSecret" class="form-check-input" />
+                <label asp-for="Twilio.ClearApiSecret" class="form-check-label"></label>
+            </div>
+            <div class="form-check mb-3">
+                <input asp-for="Twilio.ClearAuthToken" class="form-check-input" />
+                <label asp-for="Twilio.ClearAuthToken" class="form-check-label"></label>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Twilio</button>
+        </form>
+    </div>
+</div>
