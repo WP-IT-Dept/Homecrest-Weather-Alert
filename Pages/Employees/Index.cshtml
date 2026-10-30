@@ -6,7 +6,10 @@
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h1 class="h3 mb-0">Employee phone list</h1>
-    <a class="btn btn-primary" asp-page="Create">Add employee</a>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary" asp-page-handler="Template">Download CSV template</a>
+        <a class="btn btn-primary" asp-page="Create">Add employee</a>
+    </div>
 </div>
 
 <form method="get" class="row g-2 mb-3">
@@ -22,45 +25,104 @@
     </div>
 </form>
 
+<div class="card border-0 shadow-sm mb-3 p-3" style="background: var(--hc-surface, #fff); border-top: 3px solid var(--hc-slate, #45515e) !important;">
+    <h2 class="h6 mb-2">Upload CSV (initial load)</h2>
+    <p class="small text-muted mb-2">
+        Columns: <code>Name</code>, <code>Phone</code>, optional <code>Active</code> (true/false; blank = active).
+        Invalid phones are reported; duplicate E.164 numbers (in file or already in the directory) are skipped.
+    </p>
+    <form method="post" asp-page-handler="Import" enctype="multipart/form-data" class="row g-2 align-items-end">
+        <input type="hidden" name="q" value="@Model.Q" />
+        <div class="col-md-6">
+            <input class="form-control" type="file" name="CsvFile" accept=".csv,text/csv" required />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary">Upload CSV</button>
+        </div>
+    </form>
+</div>
+
 @if (TempData["StatusMessage"] is string status)
 {
     <div class="alert alert-success">@status</div>
 }
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-warning">@error</div>
+}
+@if (TempData["ImportErrors"] is string importErrors)
+{
+    <div class="alert alert-warning">
+        <div class="fw-semibold mb-1">Row details</div>
+        <pre class="mb-0 small" style="white-space: pre-wrap;">@importErrors</pre>
+    </div>
+}
 
-<div class="table-responsive">
-    <table class="table table-striped align-middle">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>E.164</th>
-                <th>Active</th>
-                <th>Opted out</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        @if (Model.Employees.Count == 0)
-        {
-            <tr><td colspan="6" class="text-muted">No employees found.</td></tr>
-        }
-        @foreach (var e in Model.Employees)
-        {
-            <tr class="@(!e.IsActive ? "table-secondary" : null)">
-                <td>@e.Name</td>
-                <td>@e.Phone</td>
-                <td class="small text-muted">@(e.PhoneE164 ?? "—")</td>
-                <td>@(e.IsActive ? "Yes" : "No")</td>
-                <td class="small text-muted">
-                    @(e.OptedOutAt.HasValue ? e.OptedOutAt.Value.UtcDateTime.ToString("yyyy-MM-dd HH:mm") + " UTC" : "—")
-                </td>
-                <td class="text-nowrap">
-                    <a asp-page="Edit" asp-route-id="@e.Id">Edit</a>
-                    <span class="text-muted">|</span>
-                    <a asp-page="Delete" asp-route-id="@e.Id" class="text-danger">Delete</a>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
-</div>
+<form method="post" id="bulk-form">
+    <input type="hidden" name="q" value="@Model.Q" />
+    <div class="d-flex flex-wrap gap-2 mb-2">
+        <button type="submit" class="btn btn-sm btn-outline-secondary" asp-page-handler="BulkActivate">Mark active</button>
+        <button type="submit" class="btn btn-sm btn-outline-secondary" asp-page-handler="BulkDeactivate">Mark inactive</button>
+        <button type="submit" class="btn btn-sm btn-outline-danger" asp-page-handler="BulkDelete"
+                onclick="return confirm('Delete selected employees? This cannot be undone.');">Delete selected</button>
+        <span class="small text-muted align-self-center" id="selection-hint">Select rows to run a bulk action.</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th style="width:2.5rem">
+                        <input type="checkbox" class="form-check-input" id="select-all" title="Select all" aria-label="Select all" />
+                    </th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>E.164</th>
+                    <th>Active</th>
+                    <th>Opted out</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Employees.Count == 0)
+            {
+                <tr><td colspan="7" class="text-muted">No employees found.</td></tr>
+            }
+            @foreach (var e in Model.Employees)
+            {
+                <tr class="@(!e.IsActive ? "table-secondary" : null)">
+                    <td>
+                        <input type="checkbox" class="form-check-input row-select" name="SelectedIds" value="@e.Id" aria-label="Select @e.Name" />
+                    </td>
+                    <td>@e.Name</td>
+                    <td>@e.Phone</td>
+                    <td class="small text-muted">@(e.PhoneE164 ?? "—")</td>
+                    <td>@(e.IsActive ? "Yes" : "No")</td>
+                    <td class="small text-muted">
+                        @(e.OptedOutAt.HasValue ? e.OptedOutAt.Value.UtcDateTime.ToString("yyyy-MM-dd HH:mm") + " UTC" : "—")
+                    </td>
+                    <td class="text-nowrap">
+                        <a asp-page="Edit" asp-route-id="@e.Id">Edit</a>
+                        <span class="text-muted">|</span>
+                        <a asp-page="Delete" asp-route-id="@e.Id" class="text-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        (function () {
+            const selectAll = document.getElementById('select-all');
+            const boxes = () => Array.from(document.querySelectorAll('.row-select'));
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    boxes().forEach(cb => { cb.checked = selectAll.checked; });
+                });
+            }
+        })();
+    </script>
+}

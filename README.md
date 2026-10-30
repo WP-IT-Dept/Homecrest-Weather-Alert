@@ -6,7 +6,7 @@ Internal ASP.NET Core (Razor Pages) app for Homecrest staff to compose weather a
 
 - Cookie authentication (ASP.NET Core Identity) with roles **User** and **Admin**
 - Compose & send: one Twilio `MessageResource.Create` **per recipient** (never group SMS); only **active** employees are messaged
-- Employee directory: searchable name + phone CRUD; US → E.164; SMS **STOP** opt-out (via Twilio Message **poll**, not a public webhook) sets inactive and records `OptedOutAt`
+- Employee directory: searchable name + phone CRUD; CSV template + upload; bulk active/inactive/delete; US → E.164; SMS **STOP** opt-out (via Twilio Message **poll**, not a public webhook) sets inactive and records `OptedOutAt`
 - Admin user management: create, disable/enable, reset password (set or **email reset link**), grant/revoke **Admin** role (Admin-only). The seed account `admin@homecrest.local` cannot be disabled or demoted.
 - **Integrations** (Admin): Exchange Online / Microsoft Graph email + Twilio credentials, editable without redeploy
 - Identity `IEmailSender` sends via Graph `Mail.Send` (password reset / welcome emails)
@@ -205,7 +205,7 @@ Ensure the app pool identity can write the SQLite file directory.
 ## Project layout
 
 - `Pages/Compose` — message + send status; polls Twilio for STOP opt-outs on send only
-- `Pages/Employees` — CRUD + search + opt-out timestamp
+- `Pages/Employees` — CRUD + search + CSV upload/template + bulk active/inactive/delete
 - `Pages/Admin/Users` — admin-only login management (+ email reset link)
 - `Pages/Admin/Config` — Integrations (Exchange Online + Twilio; encrypted overlay)
 - `Services/GraphEmailSender.cs` — Identity `IEmailSender` via Graph `Mail.Send`
